@@ -1,46 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import PageDefault from '../../../components/PageDefault';
-import FormField from '../../../components/FormField';
+import PageDefault from '../../PageDefault';
+import FormField from '../../FormField';
+import Button from '../../Button';
 
 function CadastroCategoria() {
   const valoresIniciais = {
     nome: '',
     descricao: '',
     cor: '',
-  }
+  };
   const [categorias, setCategorias] = useState([]);
   const [values, setValues] = useState(valoresIniciais);
 
-
   function setValue(chave, valor) {
-    // chave: nome, descricao, bla, bli
     setValues({
       ...values,
       [chave]: valor, // nome: 'valor'
-    })
+    });
   }
 
   function handleChange(infosDoEvento) {
     setValue(
       infosDoEvento.target.getAttribute('name'),
-      infosDoEvento.target.value
+      infosDoEvento.target.value,
     );
   }
 
+  useEffect(() => {
+    if (window.location.href.includes('localhost')) {
+      const URL = window.location.hostname.includes('localhost')
+        ? 'http://localhost:8080/categorias'
+        : 'https://hagaflix.herokuapp.com/categorias';
+      fetch(URL)
+        .then(async (respostaDoServer) => {
+          if (respostaDoServer.ok) {
+            const resposta = await respostaDoServer.json();
+            setCategorias(resposta);
+            return;
+          }
+          throw new Error('Não foi possível pegar os dados');
+        });
+    }
+  }, []);
+
   return (
     <PageDefault>
-      <h1>Cadastro de Categoria: {values.nome}</h1>
+      <h1>
+        Cadastro de Categoria:
+        {values.nome}
+      </h1>
 
       <form onSubmit={function handleSubmit(infosDoEvento) {
-          infosDoEvento.preventDefault();
-          setCategorias([
-            ...categorias,
-            values
-          ]);
+        infosDoEvento.preventDefault();
 
-          setValues(valoresIniciais)
-      }}>
+        setCategorias([
+          ...categorias,
+          values,
+        ]);
+
+        setValues(valoresIniciais);
+      }}
+      >
 
         <FormField
           label="Nome da Categoria"
@@ -66,27 +87,24 @@ function CadastroCategoria() {
           onChange={handleChange}
         />
 
-        <button>
+        <Button>
           Cadastrar
-        </button>
+        </Button>
       </form>
 
-
       <ul>
-        {categorias.map((categoria, indice) => {
-          return (
-            <li key={`${categoria}${indice}`}>
-              {categoria.nome}
-            </li>
-          )
-        })}
+        {categorias.map((categoria) => (
+          <li key={`${categoria.name}`}>
+            {categoria.titulo}
+          </li>
+        ))}
       </ul>
 
       <Link to="/">
         Ir para home
       </Link>
     </PageDefault>
-  )
+  );
 }
 
 export default CadastroCategoria;
